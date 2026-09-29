@@ -1,54 +1,108 @@
-# React + TypeScript + Vite
+# AI Response Evaluation Platform
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A full-stack AI evaluation platform for analyzing and scoring AI-generated responses across multiple quality dimensions.
 
-Currently, two official plugins are available:
+The platform allows users to submit a prompt and an AI-generated response, then uses an AI evaluation engine to assess the response for correctness, relevance, clarity, and completeness.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## Expanding the ESLint configuration
+- AI-powered response evaluation
+- Overall response score from 0–100
+- Pass / Needs Review / Failed evaluation status
+- Evaluation across four quality dimensions:
+  - Correctness
+  - Relevance
+  - Clarity
+  - Completeness
+- AI-generated reasoning
+- Identified response strengths
+- Improvement suggestions
+- Persistent evaluation history
+- Search and filter evaluation history
+- Dashboard with evaluation statistics
+- Dynamic quality metrics
+- Light and dark themes
+- Responsive SaaS-style interface
+- FastAPI backend
+- SQLite database persistence
+- OpenAI API integration
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Tech Stack
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+### Frontend
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- Lucide React
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Backend
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+- Python
+- FastAPI
+- Uvicorn
+- Pydantic
+- SQLAlchemy
+
+### AI
+
+- OpenAI API
+
+### Database
+
+- SQLite
+
+### Development & Testing
+
+- Git
+- GitHub
+- Pytest
+
+## How It Works
+
+1. A user enters a prompt and an AI-generated response.
+2. The frontend sends the evaluation request to the FastAPI backend.
+3. The backend sends the content to the AI evaluation engine.
+4. The response is evaluated across four quality dimensions.
+5. The system generates:
+   - Overall score
+   - Evaluation status
+   - Reasoning
+   - Strengths
+   - Suggestions
+6. The evaluation is saved to the database.
+7. The dashboard and evaluation history update with the new result.
+
+## Evaluation Dimensions
+
+| Dimension | Description |
+|---|---|
+| Correctness | Measures whether the response is factually and logically correct. |
+| Relevance | Measures whether the response directly addresses the user's prompt. |
+| Clarity | Measures how clearly and understandably the response is written. |
+| Completeness | Measures whether the response sufficiently covers the requested information. |
+
+## Project Structure
+
+```text
+AI Evaluation Platform/
+│
+├── backend/
+│   ├── main.py
+│   ├── database.py
+│   ├── models.py
+│   ├── schemas.py
+│   └── evaluations.db
+│
+├── src/
+│   ├── App.tsx
+│   ├── index.css
+│   └── main.tsx
+│
+├── public/
+├── .env.example
+├── .gitignore
+├── package.json
+├── vite.config.ts
+└── README.md
