@@ -19,7 +19,7 @@ const [authMode, setAuthMode] = useState<
   "welcome" | "login" | "register" | "app"
 >("welcome");
 
-const [user, setUser] = useState<{
+const [, setUser] = useState<{
   id: number;
   name: string;
   email: string;
