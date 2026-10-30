@@ -1,14 +1,20 @@
 from dotenv import load_dotenv
 from openai import OpenAI
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from passlib.context import CryptContext
 from database import Base, engine, SessionLocal
-from models import Evaluation
+from models import User, Evaluation
 
 load_dotenv()
 
 client = OpenAI()
+
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto",
+)
 
 app = FastAPI()
 
@@ -16,12 +22,24 @@ Base.metadata.create_all(bind=engine)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://evalai-dun.vercel.app",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+class RegisterRequest(BaseModel):
+    name: str
+    email: str
+    password: str
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
 
 class EvaluationRequest(BaseModel):
     prompt: str
@@ -43,6 +61,82 @@ class EvaluationResult(BaseModel):
 @app.get("/")
 def root():
     return {"message": "AI Evaluation Platform API is running"}
+
+@app.post("/register")
+def register(request: RegisterRequest):
+    db = SessionLocal()
+
+    try:
+        existing_user = (
+            db.query(User)
+            .filter(User.email == request.email.lower().strip())
+            .first()
+        )
+
+        if existing_user:
+            raise HTTPException(
+                status_code=400,
+                detail="An account with this email already exists.",
+            )
+
+        password_hash = pwd_context.hash(request.password)
+
+        user = User(
+            name=request.name.strip(),
+            email=request.email.lower().strip(),
+            password_hash=password_hash,
+        )
+
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+        return {
+            "message": "Account created successfully.",
+            "user": {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+            },
+        }
+
+    finally:
+        db.close()
+
+@app.post("/login")
+def login(request: LoginRequest):
+    db = SessionLocal()
+
+    try:
+        user = (
+            db.query(User)
+            .filter(User.email == request.email.lower().strip())
+            .first()
+        )
+
+        if not user:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid email or password.",
+            )
+
+        if not pwd_context.verify(request.password, user.password_hash):
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid email or password.",
+            )
+
+        return {
+            "message": "Login successful.",
+            "user": {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+            },
+        }
+
+    finally:
+        db.close()
 
 
 @app.post("/evaluate", response_model=EvaluationResult)
