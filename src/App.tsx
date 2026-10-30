@@ -15,6 +15,22 @@ import {
 } from "lucide-react";
 
 function App() {
+const [authMode, setAuthMode] = useState<
+  "welcome" | "login" | "register" | "app"
+>("welcome");
+
+const [user, setUser] = useState<{
+  id: number;
+  name: string;
+  email: string;
+} | null>(null);
+
+const [authName, setAuthName] = useState("");
+const [authEmail, setAuthEmail] = useState("");
+const [authPassword, setAuthPassword] = useState("");
+const [authError, setAuthError] = useState("");
+const [authLoading, setAuthLoading] = useState(false);
+
   const [page, setPage] = useState("dashboard");
   const [darkMode, setDarkMode] = useState(false);
   const [prompt, setPrompt] = useState("");
@@ -33,7 +49,7 @@ function App() {
   useEffect(() => {
   const loadEvaluations = async () => {
     try {
-      const result = await fetch("http://127.0.0.1:8000/evaluations");
+      const result = await fetch("https://evalai-backend-z6nz.onrender.com/evaluations");
 
       if (!result.ok) {
         throw new Error("Failed to load evaluations.");
@@ -109,8 +125,58 @@ const filteredEvaluations = evaluations.filter((evaluation) =>
     .toLowerCase()
     .includes(historySearch.toLowerCase())
 );
+
+
+ const handleRegister = async () => {
+  if (!authName.trim() || !authEmail.trim() || !authPassword.trim()) {
+    setAuthError("Please fill in all fields.");
+    return;
+  }
+
+  setAuthError("");
+  setAuthLoading(true);
+
+  try {
+    const result = await fetch("https://evalai-backend-z6nz.onrender.com/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: authName,
+        email: authEmail,
+        password: authPassword,
+      }),
+    });
+
+    const data = await result.json();
+
+    if (!result.ok) {
+      throw new Error(data.detail || "Could not create your account.");
+    }
+
+    setUser(data.user);
+    setAuthName("");
+    setAuthEmail("");
+    setAuthPassword("");
+    setAuthError("");
+    setAuthMode("app");
+  } catch (err) {
+    setAuthError(
+      err instanceof Error
+        ? err.message
+        : "Could not create your account."
+    );
+  } finally {
+    setAuthLoading(false);
+  }
+};
   
   const handleRunEvaluation = async () => {
+ 
+
+  
+
   if (!prompt.trim() || !response.trim()) {
     setError("Please enter both a user prompt and an AI response.");
     setLoading(true);
@@ -120,7 +186,7 @@ const filteredEvaluations = evaluations.filter((evaluation) =>
   setError("");
 
   try {
-    const result = await fetch("http://127.0.0.1:8000/evaluate", {
+    const result = await fetch("https://evalai-backend-z6nz.onrender.com/evaluate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -142,7 +208,7 @@ const filteredEvaluations = evaluations.filter((evaluation) =>
     setStrengths(data.strengths);
     setSuggestions(data.suggestions);
     const evaluationsResult = await fetch(
-  "http://127.0.0.1:8000/evaluations"
+  "https://evalai-backend-z6nz.onrender.com/evaluations"
 );
 
 if (evaluationsResult.ok) {
@@ -728,6 +794,161 @@ className={`min-h-32 w-full resize-y rounded-xl border p-4 text-sm outline-none 
       </div>
     );
   }
+
+if (authMode === "welcome") {
+  return (
+    <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center px-6">
+      <div className="w-full max-w-md text-center">
+        <div className="mb-8">
+          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-slate-900 text-xl font-bold">
+            E
+          </div>
+
+          <h1 className="text-4xl font-bold tracking-tight">
+            EvalAI
+          </h1>
+
+          <p className="mt-3 text-slate-400">
+            Evaluate AI responses with structured, consistent feedback.
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          <button
+            onClick={() => setAuthMode("register")}
+            className="w-full rounded-xl bg-white px-5 py-3.5 font-semibold text-slate-900 transition hover:bg-slate-200"
+          >
+            Create Account
+          </button>
+
+          <button
+            onClick={() => setAuthMode("login")}
+            className="w-full rounded-xl border border-slate-700 bg-slate-900 px-5 py-3.5 font-semibold text-white transition hover:bg-slate-800"
+          >
+            Log In
+          </button>
+
+          <button
+            onClick={() => setAuthMode("welcome")}
+            className="w-full rounded-xl px-5 py-3.5 font-medium text-slate-400 transition hover:text-white"
+          >
+            Continue as Guest
+          </button>
+        </div>
+
+        <p className="mt-8 text-xs text-slate-500">
+          Guest access lets you evaluate responses without creating an account.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+
+
+if (authMode === "register") {
+  return (
+    <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center px-6">
+      <div className="w-full max-w-md">
+        <button
+          onClick={() => {
+            setAuthMode("welcome");
+            setAuthError("");
+          }}
+          className="mb-8 text-sm text-slate-400 transition hover:text-white"
+        >
+          ← Back
+        </button>
+
+        <div className="mb-8">
+          <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-white text-lg font-bold text-slate-900">
+            E
+          </div>
+
+          <h1 className="text-3xl font-bold tracking-tight">
+            Create your account
+          </h1>
+
+          <p className="mt-2 text-slate-400">
+            Save your evaluations and access your personal dashboard.
+          </p>
+        </div>
+
+        <div className="space-y-5">
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-300">
+              Name
+            </label>
+
+            <input
+              type="text"
+              value={authName}
+              onChange={(event) => setAuthName(event.target.value)}
+              placeholder="Your name"
+              className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:border-slate-500"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-300">
+              Email
+            </label>
+
+            <input
+              type="email"
+              value={authEmail}
+              onChange={(event) => setAuthEmail(event.target.value)}
+              placeholder="you@example.com"
+              className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:border-slate-500"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-300">
+              Password
+            </label>
+
+            <input
+              type="password"
+              value={authPassword}
+              onChange={(event) => setAuthPassword(event.target.value)}
+              placeholder="Create a password"
+              className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:border-slate-500"
+            />
+          </div>
+
+          {authError && (
+            <div className="rounded-xl border border-red-900/50 bg-red-950/30 px-4 py-3 text-sm text-red-300">
+              {authError}
+            </div>
+          )}
+
+          <button
+            onClick={handleRegister}
+            disabled={authLoading}
+            className="w-full rounded-xl bg-white px-5 py-3.5 font-semibold text-slate-900 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {authLoading ? "Creating Account..." : "Create Account"}
+          </button>
+        </div>
+
+        <p className="mt-6 text-center text-sm text-slate-500">
+          Already have an account?{" "}
+          <button
+            onClick={() => {
+              setAuthMode("login");
+              setAuthError("");
+            }}
+            className="font-medium text-white hover:underline"
+          >
+            Log in
+          </button>
+        </p>
+      </div>
+    </div>
+  );
+}
+
   return (
     <div
   className={`min-h-screen ${
