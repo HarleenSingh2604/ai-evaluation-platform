@@ -14,6 +14,22 @@ import {
   XCircle,
 } from "lucide-react";
 
+interface Evaluation {
+  id: number;
+  user_id: number | null;
+  prompt: string;
+  response: string;
+  score: number;
+  status: "Passed" | "Review" | "Needs Review";
+  reasoning: string;
+  correctness: number;
+  relevance: number;
+  clarity: number;
+  completeness: number;
+  strengths: string[];
+  suggestions: string[];
+}
+
 function App() {
 const [authMode, setAuthMode] = useState<
   "welcome" | "login" | "register" | "app"
@@ -30,6 +46,7 @@ const [authEmail, setAuthEmail] = useState("");
 const [authPassword, setAuthPassword] = useState("");
 const [authError, setAuthError] = useState("");
 const [authLoading, setAuthLoading] = useState(false);
+const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const [page, setPage] = useState("dashboard");
   const [darkMode, setDarkMode] = useState(false);
@@ -42,7 +59,7 @@ const [authLoading, setAuthLoading] = useState(false);
   const [reasoning, setReasoning] = useState("");
   const [strengths, setStrengths] = useState<string[]>([]);
   const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [evaluations, setEvaluations] = useState<any[]>([]);
+  const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [historySearch, setHistorySearch] = useState("");
   const [historyStatus, setHistoryStatus] = useState("All");
 
@@ -239,7 +256,10 @@ if (evaluationsResult.ok) {
           {/* Header */}
           <div className="mb-8">
             <button
-              onClick={() => setPage("dashboard")}
+              onClick={() => {
+  setPage("dashboard");
+  setMobileMenuOpen(false);
+}}
               className="mb-5 text-sm font-medium text-slate-500 hover:text-slate-900"
             >
               ← Back to Dashboard
@@ -960,7 +980,11 @@ if (authMode === "register") {
       <div className="flex min-h-screen">
         {/* Sidebar */}
         <aside
-  className={`hidden w-64 border-r lg:flex lg:flex-col ${
+  className={`${
+    mobileMenuOpen
+      ? "fixed inset-y-0 left-0 z-50 flex w-64 flex-col shadow-xl"
+      : "hidden"
+  } border-r lg:static lg:z-auto lg:flex lg:w-64 lg:shrink-0 lg:flex-col lg:shadow-none ${
     darkMode
       ? "border-slate-800 bg-slate-900"
       : "border-slate-200 bg-white"
@@ -984,7 +1008,10 @@ if (authMode === "register") {
              icon={<LayoutDashboard size={18} />}
              label="Dashboard"
              active={page === "dashboard"}
-             onClick={() => setPage("dashboard")}
+             onClick={() => {
+  setPage("dashboard");
+  setMobileMenuOpen(false);
+}}
             />
             <NavItem
               icon={<Plus size={18} />}
@@ -995,7 +1022,10 @@ if (authMode === "register") {
               icon={<FileText size={18} />}
               label="Evaluation History"
               active={page === "evaluation-history"}
-              onClick={() => setPage("evaluation-history")}
+              onClick={() => {
+  setPage("evaluation-history");
+  setMobileMenuOpen(false);
+}}
              />
             
           </nav>
@@ -1005,7 +1035,10 @@ if (authMode === "register") {
   icon={<Settings size={18} />}
   label="Settings"
   active={page === "settings"}
-  onClick={() => setPage("settings")}
+  onClick={() => {
+  setPage("settings");
+  setMobileMenuOpen(false);
+}}
 />
 
             <div
@@ -1060,9 +1093,12 @@ if (authMode === "register") {
   }`}
 >
             <div className="flex items-center gap-3">
-              <button className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 lg:hidden">
-                <Menu size={20} />
-              </button>
+              <button
+  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+  className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 lg:hidden"
+>
+  <Menu size={20} />
+</button>
 
               <div>
                 <p className="text-xs text-slate-400">Workspace</p>
@@ -1872,7 +1908,7 @@ function EvaluationRow({
   title: string;
   model: string;
   score: string;
-  status: "Passed" | "Review";
+  status: "Passed" | "Review" | "Needs Review";
   darkMode: boolean;
 }) {
   return (
