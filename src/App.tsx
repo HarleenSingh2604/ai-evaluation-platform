@@ -32,7 +32,7 @@ interface Evaluation {
 
 function App() {
 const [authMode, setAuthMode] = useState<
-  "welcome" | "login" | "register" | "app"
+  "welcome" | "login" | "register" | "app" | "guest"
 >("welcome");
 
 const [, setUser] = useState<{
@@ -40,6 +40,17 @@ const [, setUser] = useState<{
   name: string;
   email: string;
 } | null>(null);
+
+const [guestId] = useState(() => {
+  let id = localStorage.getItem("evalai_guest_id");
+
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem("evalai_guest_id", id);
+  }
+
+  return id;
+});
 
 const [authName, setAuthName] = useState("");
 const [authEmail, setAuthEmail] = useState("");
@@ -66,7 +77,7 @@ const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   useEffect(() => {
   const loadEvaluations = async () => {
     try {
-      const result = await fetch("https://evalai-backend-z6nz.onrender.com/evaluations");
+      const result = await fetch(`https://evalai-backend-z6nz.onrender.com/evaluations?guest_id=${encodeURIComponent(guestId)}`);
 
       if (!result.ok) {
         throw new Error("Failed to load evaluations.");
@@ -81,7 +92,7 @@ const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   };
 
   loadEvaluations();
-}, []);
+}, [guestId]);
 const scoreDistribution = {
   excellent: evaluations.filter((evaluation) => evaluation.score >= 90).length,
   good: evaluations.filter(
@@ -209,9 +220,10 @@ const filteredEvaluations = evaluations.filter((evaluation) =>
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        prompt,
-        response,
-      }),
+  prompt,
+  response,
+  guest_id: guestId,
+}),
     });
 
     if (!result.ok) {
@@ -225,7 +237,7 @@ const filteredEvaluations = evaluations.filter((evaluation) =>
     setStrengths(data.strengths);
     setSuggestions(data.suggestions);
     const evaluationsResult = await fetch(
-  "https://evalai-backend-z6nz.onrender.com/evaluations"
+  `https://evalai-backend-z6nz.onrender.com/evaluations?guest_id=${encodeURIComponent(guestId)}`
 );
 
 if (evaluationsResult.ok) {
@@ -448,7 +460,10 @@ className={`min-h-32 w-full resize-y rounded-xl border p-4 text-sm outline-none 
 >
         <div className="mx-auto max-w-5xl px-5 py-8 sm:px-8">
           <button
-            onClick={() => setPage("new-evaluation")}
+            onClick={() => {
+  setPage("new-evaluation");
+  setMobileMenuOpen(false);
+}}
             className={`mb-5 text-sm font-medium ${
   darkMode
     ? "text-slate-400 hover:text-slate-100"
@@ -849,11 +864,14 @@ if (authMode === "welcome") {
           </button>
 
           <button
-            onClick={() => setAuthMode("welcome")}
-            className="w-full rounded-xl px-5 py-3.5 font-medium text-slate-400 transition hover:text-white"
-          >
-            Continue as Guest
-          </button>
+  onClick={() => {
+    setAuthMode("guest");
+    setPage("dashboard");
+  }}
+  className="w-full rounded-xl px-5 py-3.5 font-medium text-slate-400 transition hover:text-white"
+>
+  Continue as Guest
+</button>
         </div>
 
         <p className="mt-8 text-xs text-slate-500">

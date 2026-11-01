@@ -44,6 +44,7 @@ class LoginRequest(BaseModel):
 class EvaluationRequest(BaseModel):
     prompt: str
     response: str
+    guest_id: str | None = None
 
 
 class EvaluationResult(BaseModel):
@@ -139,6 +140,7 @@ def login(request: LoginRequest):
         db.close()
 
 
+
 @app.post("/evaluate", response_model=EvaluationResult)
 def evaluate(request: EvaluationRequest):
 
@@ -198,6 +200,7 @@ Return only the requested structured evaluation.
 
     try:
         db_evaluation = Evaluation(
+            guest_id=request.guest_id,
             prompt=request.prompt,
             response=request.response,
             score=evaluation.score,
@@ -220,12 +223,13 @@ Return only the requested structured evaluation.
         db.close()
 
 @app.get("/evaluations")
-def get_evaluations():
+def get_evaluations(guest_id: str):
     db = SessionLocal()
 
     try:
         evaluations = (
             db.query(Evaluation)
+            .filter(Evaluation.guest_id == guest_id)
             .order_by(Evaluation.id.desc())
             .all()
         )
